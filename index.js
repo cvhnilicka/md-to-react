@@ -45,7 +45,7 @@ function checkInnerText(line) {
             // its probably bold. we should iterate through and look for the next ** and close inner text in a strong
             returnText += !boldStart ? '<strong>' : '</strong>';
             boldStart = !boldStart
-            i+=1;  // skip the double *
+            i += 1;  // skip the double *
         } else {
             returnText += line.charAt(i)
         }
@@ -79,25 +79,20 @@ function readSingleFileAndSplit(filename) {
     fs.readFile(fileToRead, 'utf8', function (err, contents) {
         var arr = contents.split('\n');  // split the file into lines
 
-        var stream = fs.createWriteStream('./output/'+filename.substr(0, filename.length - 3) + ".js");
+        var stream = fs.createWriteStream('./output/' + filename.substr(0, filename.length - 3) + ".js");
         stream.once('open', function (fd) {
             stream.write(HEADER + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + " = () => (\n");  // Writing the header of the react component
 
-
-            // this variable and while loop are just to limit how much im checking while testing. WILL DELETE
-            var stopper = 25;
-            while (stopper-- > 0) {
-                // here i need to figure out react components
-                arr.forEach(element => {
-                    var ret = mDtoReactElement(element);
-                    stream.write('\n' + ret)
-                });
-            } // end of while loop
+            // here i need to figure out react components
+            arr.forEach(element => {
+                var ret = mDtoReactElement(element);
+                stream.write('\n' + ret)
+            });
 
 
-                stream.write(');\n\nexport default ' + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + ";") // Closing and exporting the react component
-                stream.end();
-            
+            stream.write(');\n\nexport default ' + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + ";") // Closing and exporting the react component
+            stream.end();
+
         });
     });
 }
