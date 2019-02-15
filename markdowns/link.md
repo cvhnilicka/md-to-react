@@ -1,0 +1,1 @@
+The original Markdown syntax specification can be found [here](http://daringfireball.net/projects/markdown/syntax).
