@@ -79,7 +79,7 @@ function readSingleFileAndSplit(filename) {
     fs.readFile(fileToRead, 'utf8', function (err, contents) {
         var arr = contents.split('\n');  // split the file into lines
 
-        var stream = fs.createWriteStream(filename.substr(0, filename.length - 3) + ".js");
+        var stream = fs.createWriteStream('./output/'+filename.substr(0, filename.length - 3) + ".js");
         stream.once('open', function (fd) {
             stream.write(HEADER + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + " = () => (\n");  // Writing the header of the react component
 
