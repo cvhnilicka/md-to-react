@@ -1,59 +1,112 @@
 var fs = require('fs');
-const MD_DIR = './markdowns/';
 
-const HEADER = "const "
-
+// BEGIN:  CONSTANTS
+const MD_DIR = './markdowns/';                              // The markdown directory
+const HEADER = "const "                                     // The beginning of each react component to be created
+// END:  CONSTANTS
 
 readMarkdownDirectory()
 
+/**
+ * Markdown Headers to JSX Headers
+ *
+ * Takes in a particular line that has been determined to begin with a pound symbol. This will iterate through the line and create the necessary
+ * header tag of proper size and return it.
+ * 
+ * @param {string}   lineStartingWithPound     A line that begins with the pound symbol # to be converted to a <h*></h*> tag
+ * 
+ * @return {string} The full header tag with content
+ */
+function createHeaderTag(lineStartingWithPound) {
+    var hValue = 1;
+    for (var i = 1; i < lineStartingWithPound.length; i++) {
+        if (lineStartingWithPound.charAt(i) === '#') hValue++;
+        else break;
+    }
+    return '<h' + hValue + '>' + lineStartingWithPound.substr(hValue) + '</h' + hValue + '>';
+}
 
+/**
+ * Formats Inner Markdown Text
+ *
+ * Takes in a particular line and iterate over it determining if it requires any 'special' formatting.
+ * Current formatting it will check and complete.  Bold -> <strong></strong>
+ * 
+ * @param {string}   line     A line that needs to be checked
+ * 
+ * @return {string} The converted line from markdown to JSX
+ */
+function checkInnerText(line) {
+    var returnText = ""
+    var boldStart = false;
+    for (var i = 0; i < line.length; i++) {
+        // iterate through line and look for inner text effects such as strong/italics
+        if (line.charAt(i) === '*' && line.charAt(i + 1) === '*') {
+            // its probably bold. we should iterate through and look for the next ** and close inner text in a strong
+            returnText += !boldStart ? '<strong>' : '</strong>';
+            boldStart = !boldStart
+            i+=1;  // skip the double *
+        } else {
+            returnText += line.charAt(i)
+        }
+    }
+    return returnText
+}
 
-
-
+/**
+ * Markdown to React
+ *
+ * Takes in a particular line and will determine what formatting needs to be addressed
+ * 
+ * @param {string}   line     A line that needs to be checked
+ * 
+ * @return {string} The converted line from markdown to JSX
+ */
 function mDtoReactElement(line) {
     if (line.charAt(0) === '#') {
-        var hValue = 1;
-        for(var i = 1; i < line.length; i++) {
-            if (line.charAt(i) === '#') hValue++;
-        }
-        return '<h'+hValue+'>' + line.substr(hValue) + '</h' + hValue +'>';
+        return createHeaderTag(line);
+    } else {
+        return checkInnerText(line);
     }
-   
+
     return ""
 }
 
 
 function readSingleFileAndSplit(filename) {
     var fileToRead = MD_DIR + filename;
-
-
     console.log(fileToRead)
     fs.readFile(fileToRead, 'utf8', function (err, contents) {
         var arr = contents.split('\n');  // split the file into lines
 
-        var stream = fs.createWriteStream(filename.substr(0, filename.length-3) + ".js");
+        var stream = fs.createWriteStream(filename.substr(0, filename.length - 3) + ".js");
         stream.once('open', function (fd) {
-            stream.write(HEADER + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length-4) + " = () => (\n");  // Writing the header of the react component
+            stream.write(HEADER + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + " = () => (\n");  // Writing the header of the react component
 
-            // here i need to figure out react components
-            arr.forEach(element => {
-                // console.log('E:' + element)
-                var ret = mDtoReactElement(element);
-                stream.write('\n'+ret)
-            });
 
-            stream.write(');\n\nexport default ' + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length-4) + ";") // Closing and exporting the react component
+            // this variable and while loop are just to limit how much im checking while testing. WILL DELETE
+            var stopper = 25;
+            while (stopper-- > 0) {
+                // here i need to figure out react components
+                arr.forEach(element => {
+                    var ret = mDtoReactElement(element);
+                    stream.write('\n' + ret)
+                });
+            } // end of while loop
 
-            stream.end();
+
+                stream.write(');\n\nexport default ' + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + ";") // Closing and exporting the react component
+                stream.end();
+            
         });
-
-
-
-        console.log(arr.length);
     });
 }
 
-
+/**
+ * Reads all files the markdown directory
+ *
+ * Iterates through the ./markdown/ directory to convert each *.md file to a react component
+ */
 function readMarkdownDirectory() {
     fs.readdir(MD_DIR, (err, files) => {
         files.forEach(file => {
