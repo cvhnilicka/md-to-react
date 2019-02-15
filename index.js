@@ -3,7 +3,10 @@ var fs = require('fs');
 // BEGIN:  CONSTANTS
 const MD_DIR = './markdowns/';                              // The markdown directory
 const HEADER = "const "                                     // The beginning of each react component to be created
+const LINK_REGEX = /\[.*?\]/g
 // END:  CONSTANTS
+
+
 
 readMarkdownDirectory()
 
@@ -39,11 +42,11 @@ function createATag(line) {
         if(display) {
             displayText += line.charAt(i)
         } else if (ref) {
-            ref += line.charAt(i)
+            href += line.charAt(i)
         }
     }
-
-    return '<a href=' + ref + '>'+displayText+'</a>'
+    displayText = checkInnerText(displayText)
+    return '<a href="' + href + '">'+displayText+'</a>'
 }
 
 
@@ -63,7 +66,7 @@ function createHeaderTag(lineStartingWithPound) {
         if (lineStartingWithPound.charAt(i) === '#') hValue++;
         else break;
     }
-    return '<h' + hValue + '>' + lineStartingWithPound.substr(hValue) + '</h' + hValue + '>';
+    return '<h' + hValue + '>' + lineStartingWithPound.substr(hValue) + '</h' + hValue + '>\n';
 }
 
 /**
@@ -105,7 +108,10 @@ function checkInnerText(line) {
 function mDtoReactElement(line) {
     if (line.charAt(0) === '#') {
         return createHeaderTag(line);
+    } else if(line.match(LINK_REGEX) !== null) {
+        return createATag(line);
     } else {
+        // console.log(new RegExp(LINK_REGEX).test(line))
         return checkInnerText(line);
     }
 
