@@ -8,6 +8,46 @@ const HEADER = "const "                                     // The beginning of 
 readMarkdownDirectory()
 
 /**
+ * Markdown Links to JSX Links
+ *
+ * Converts a markdown link to a jsx link for the react component.
+ * 
+ * @param {string}   line     A line that begins with [ indicating a link
+ * 
+ * @return {string} The full jsx link
+ */
+function createATag(line) {
+    var displayText = ""
+    var href = ""
+    var display = false
+    var ref = false
+
+    for(var i = 0; i < line.length; i++) {
+        if(line.charAt(i) === '[') {
+            display = true 
+            i+=1;
+        } else if (line.charAt(i) === ']') {
+            display = false
+        }
+        if(line.charAt(i) === '(') {
+            ref = true
+            i+=1;
+        } else if (line.charAt(i) === ')') {
+            ref = false
+        }
+
+        if(display) {
+            displayText += line.charAt(i)
+        } else if (ref) {
+            ref += line.charAt(i)
+        }
+    }
+
+    return '<a href=' + ref + '>'+displayText+'</a>'
+}
+
+
+/**
  * Markdown Headers to JSX Headers
  *
  * Takes in a particular line that has been determined to begin with a pound symbol. This will iterate through the line and create the necessary
