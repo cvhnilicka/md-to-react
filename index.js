@@ -51,7 +51,7 @@ function createATag(line) {
         }
     }
     displayText = checkInnerText(displayText)
-    return '<a href="' + href + '">'+displayText+'</a>'
+    return '<a href="' + href + '">'+displayText+'</a>\n\n'
 }
 
 
@@ -111,6 +111,11 @@ function checkInnerText(line) {
  * @return {string} The converted line from markdown to JSX
  */
 function mDtoReactElement(line) {
+
+    switch(line.charAt(0)){
+        case '#': if(line.charAt(1) === '#') { createHeaderTag(line)}
+                else (line.charAt(1) === ' ') {createListTag(line)}
+    }
     if (line.charAt(0) === '#') {
         return createHeaderTag(line);
     } else if(line.match(LINK_REGEX) !== null) {
