@@ -3,17 +3,35 @@ var fs = require('fs');
 // BEGIN:  CONSTANTS
 const MD_DIR = './markdowns/';                              // The markdown directory
 const HEADER = "const "                                     // The beginning of each react component to be created
-const LINK_REGEX = /\[.*?\]/g
+const REGEX_LINK_DEC = /\[.*?\]/g
+const REGEX_LINK_NAK = /<.*?>/g
+const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
 // END:  CONSTANTS
 
 
 
-readMarkdownDirectory()
+// readMarkdownDirectory()
 
 
 //=================================================================================================================================================================================
 //========================================================= BEGIN: Helper functions for MD -> JSX =================================================================================
 //=================================================================================================================================================================================
+
+/**
+ * Markdown list item to li element
+ *
+ * Takes in a particular line that has been determined to begin with a * and creates a <li> tag for it
+ * 
+ * @param {string}   line     A line that begins with an astrix
+ * 
+ * @return {string} A new list item
+ */
+function createListItem(line) {
+    if (line.charAt(0) !== '*') return;
+    var displayText = checkInnerText(line.substr(1, line.length - 1));
+    return '<li>' + displayText + '</li>\n'
+}
+
 
 /**
  * Markdown Links to JSX Links
@@ -29,29 +47,35 @@ function createATag(line) {
     var href = ""
     var display = false
     var ref = false
+    var matches;
+    if ((matches = line.match(REGEX_LINK_NAK)) !== null) {
+        href = matches[0].substr(1, line.length-2);
+        displayText = matches[0].substr(1, line.length-2);
+    } else {
 
-    for(var i = 0; i < line.length; i++) {
-        if(line.charAt(i) === '[') {
-            display = true 
-            i+=1;
-        } else if (line.charAt(i) === ']') {
-            display = false
-        }
-        if(line.charAt(i) === '(') {
-            ref = true
-            i+=1;
-        } else if (line.charAt(i) === ')') {
-            ref = false
-        }
+        for (var i = 0; i < line.length; i++) {
+            if (line.charAt(i) === '[') {
+                display = true
+                i += 1;
+            } else if (line.charAt(i) === ']') {
+                display = false
+            }
+            if (line.charAt(i) === '(') {
+                ref = true
+                i += 1;
+            } else if (line.charAt(i) === ')') {
+                ref = false
+            }
 
-        if(display) {
-            displayText += line.charAt(i)
-        } else if (ref) {
-            href += line.charAt(i)
+            if (display) {
+                displayText += line.charAt(i)
+            } else if (ref) {
+                href += line.charAt(i)
+            }
         }
+        displayText = checkInnerText(displayText)
     }
-    displayText = checkInnerText(displayText)
-    return '<a href="' + href + '">'+displayText+'</a>\n\n'
+    return '<a href="' + href + '">' + displayText + '</a>\n\n'
 }
 
 
@@ -112,13 +136,13 @@ function checkInnerText(line) {
  */
 function mDtoReactElement(line) {
 
-    switch(line.charAt(0)){
-        case '#': if(line.charAt(1) === '#') { createHeaderTag(line)}
-                else if (line.charAt(1) === ' ') {createListTag(line)}
-    }
+    // switch(line.charAt(0)){
+    //     case '#': if(line.charAt(1) === '#') { createHeaderTag(line)}
+
+    // }
     if (line.charAt(0) === '#') {
         return createHeaderTag(line);
-    } else if(line.match(LINK_REGEX) !== null) {
+    } else if (line.match(REGEX_LINK_DEC) !== null || line.match(REGEX_LINK_NAK) !== null) {
         return createATag(line);
     } else {
         // console.log(new RegExp(LINK_REGEX).test(line))
@@ -181,3 +205,9 @@ function readMarkdownDirectory() {
 //=================================================================================================================================================================================
 //========================================================= END: Directory and File Access ========================================================================================
 //=================================================================================================================================================================================
+
+module.exports = {
+    createATag: createATag,
+    createHeaderTag: createHeaderTag,
+    createListItem: createListItem
+};
