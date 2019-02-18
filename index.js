@@ -114,7 +114,7 @@ function mDtoReactElement(line) {
 
     switch(line.charAt(0)){
         case '#': if(line.charAt(1) === '#') { createHeaderTag(line)}
-                else (line.charAt(1) === ' ') {createListTag(line)}
+                else if (line.charAt(1) === ' ') {createListTag(line)}
     }
     if (line.charAt(0) === '#') {
         return createHeaderTag(line);
