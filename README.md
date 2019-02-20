@@ -17,13 +17,16 @@ An NPM package that converts markdown files to a static react component. It pars
 
 ###### Links
 
+__supports inline links only currently__
+
 `<inner-naked-link-text>` => `<a href="inner-naked-link-text">inner-naked-link-text</a>`  
 `[here](http://daringfireball.net/projects/markdown/syntax)` => `<a href="http://daringfireball.net/projects/markdown/syntax">here</a>`  
 
 ###### Lists
 `* A list item` => `<li> A list item</li>`
 
-
+###### Images
+`![MacDown logo](http://macdown.uranusjr.com/static/images/logo-160.png)` => `<img src={"http://macdown.uranusjr.com/static/images/logo-160.png"} alt="MacDown logo" />`
 
 #### Testing
 

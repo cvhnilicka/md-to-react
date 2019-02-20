@@ -6,6 +6,7 @@ const HEADER = "const "                                     // The beginning of 
 const REGEX_LINK_DEC = /\[.*?\]/g
 const REGEX_LINK_NAK = /<.*?>/g
 const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
+const REGEX_IMG = /\!\[.*?\]\(.*?\)/g
 // END:  CONSTANTS
 
 
@@ -16,6 +17,25 @@ const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
 //=================================================================================================================================================================================
 //========================================================= BEGIN: Helper functions for MD -> JSX =================================================================================
 //=================================================================================================================================================================================
+
+/**
+ * Markdown inline image to jsx image
+ *
+ * Takes in a particular line that contains an inline refrence for an image and converts it 
+ * to a jsx img tag
+ * 
+ * @param {string}   line     A line that contains an inline image 
+ * 
+ * @return {string} A new image
+ */
+function createImageTag(line) {
+    var title = line.match(/\!\[.*?\]/g)[0]
+    title = title.substring(2, title.length-1)
+    var src = (line.match(/\(.*?\)/g)[0])
+    src = src.substring(1, src.length-1)
+    return '<img src={"'+ src+'"} alt="' + title + '" />\n\n'
+}
+
 
 /**
  * Markdown list item to li element
@@ -49,8 +69,8 @@ function createATag(line) {
     var ref = false
     var matches;
     if ((matches = line.match(REGEX_LINK_NAK)) !== null) {
-        href = matches[0].substr(1, line.length-2);
-        displayText = matches[0].substr(1, line.length-2);
+        href = matches[0].substr(1, line.length - 2);
+        displayText = matches[0].substr(1, line.length - 2);
     } else {
 
         for (var i = 0; i < line.length; i++) {
@@ -144,6 +164,9 @@ function mDtoReactElement(line) {
         return createHeaderTag(line);
     } else if (line.match(REGEX_LINK_DEC) !== null || line.match(REGEX_LINK_NAK) !== null) {
         return createATag(line);
+    }
+    else if (line.match(REGEX_IMG) !== null) {
+        return createImageTag(line);
     } else {
         // console.log(new RegExp(LINK_REGEX).test(line))
         return checkInnerText(line);
@@ -209,5 +232,6 @@ function readMarkdownDirectory() {
 module.exports = {
     createATag: createATag,
     createHeaderTag: createHeaderTag,
-    createListItem: createListItem
+    createListItem: createListItem,
+    createImageTag: createImageTag
 };
