@@ -7,11 +7,12 @@ const REGEX_LINK_DEC = /\[.*?\]/g
 const REGEX_LINK_NAK = /<.*?>/g
 const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
 const REGEX_IMG = /\!\[.*?\]\(.*?\)/g
+const REGEX_LIST = /^\*\s\S/g
 // END:  CONSTANTS
 
 
 
-// readMarkdownDirectory()
+readMarkdownDirectory()
 
 
 //=================================================================================================================================================================================
@@ -30,10 +31,10 @@ const REGEX_IMG = /\!\[.*?\]\(.*?\)/g
  */
 function createImageTag(line) {
     var title = line.match(/\!\[.*?\]/g)[0]
-    title = title.substring(2, title.length-1)
+    title = title.substring(2, title.length - 1)
     var src = (line.match(/\(.*?\)/g)[0])
-    src = src.substring(1, src.length-1)
-    return '<img src={"'+ src+'"} alt="' + title + '" />\n\n'
+    src = src.substring(1, src.length - 1)
+    return '<img src={"' + src + '"} alt="' + title + '" />\n\n'
 }
 
 
@@ -167,6 +168,8 @@ function mDtoReactElement(line) {
     }
     else if (line.match(REGEX_IMG) !== null) {
         return createImageTag(line);
+    } else if (line.match(REGEX_LIST) !== null) {
+        return createListItem(line);
     } else {
         // console.log(new RegExp(LINK_REGEX).test(line))
         return checkInnerText(line);
@@ -193,6 +196,7 @@ function readSingleFileAndSplit(filename) {
     console.log(fileToRead)
     fs.readFile(fileToRead, 'utf8', function (err, contents) {
         var arr = contents.split('\n');  // split the file into lines
+        var listBool = false;
 
         var stream = fs.createWriteStream('./output/' + filename.substr(0, filename.length - 3) + ".js");
         stream.once('open', function (fd) {
@@ -200,8 +204,24 @@ function readSingleFileAndSplit(filename) {
 
             // here i need to figure out react components
             arr.forEach(element => {
-                var ret = mDtoReactElement(element);
-                stream.write('\n' + ret)
+                if (element) {
+                    var ret = mDtoReactElement(element);
+                    if (ret.includes('<li>') && !listBool) {
+                        listBool = true;
+                        stream.write("\n<ul>\n");
+                        stream.write(ret);
+                    } else if (!ret.includes('<li>') && listBool) {
+                        stream.write("\n</ul>\n");
+                        listBool = false;
+                        stream.write(ret);
+                    } else if (ret.includes('<li>') && listBool) {
+                        stream.write(ret);
+                    } else if (!ret.includes('<li>') && !listBool) {
+                        stream.write('\n' + ret);
+                    }
+                }
+                // if (!listBool) 
+
             });
 
 
