@@ -30,11 +30,10 @@ Before I tell you about all the extra syntaxes and capabilities I have, I'll int
 ### Line Breaks
 To force a line break, put two spaces and a newline (return) at the end of the line.
 
-* This two-line bullet 
+* This two-line bullet  
 won't break
 
-* This two-line bullet  
-will break
+* This two-line bullet will break
 
 Here is the code:
 

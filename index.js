@@ -3,11 +3,19 @@ var fs = require('fs');
 // BEGIN:  CONSTANTS
 const MD_DIR = './markdowns/';                              // The markdown directory
 const HEADER = "const "                                     // The beginning of each react component to be created
+// LINK
 const REGEX_LINK_DEC = /\[.*?\]/g
 const REGEX_LINK_NAK = /<.*?>/g
-const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
+// IMG
 const REGEX_IMG = /\!\[.*?\]\(.*?\)/g
+const REGEX_IMG_TITLE = /\!\[.*?\]/g
+const REGEX_IMG_SRC = /\(.*?\)/g
+// LIST
 const REGEX_LIST = /^\*\s\S/g
+const REGEX_LIST_MULTILINE = /^\*\s\S.+\s{2}\n/g
+// MISC
+const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
+
 // END:  CONSTANTS
 
 
@@ -30,9 +38,9 @@ readMarkdownDirectory()
  * @return {string} A new image
  */
 function createImageTag(line) {
-    var title = line.match(/\!\[.*?\]/g)[0]
+    var title = line.match(REGEX_IMG_TITLE)[0]
     title = title.substring(2, title.length - 1)
-    var src = (line.match(/\(.*?\)/g)[0])
+    var src = (line.match(REGEX_IMG_SRC)[0])
     src = src.substring(1, src.length - 1)
     return '<img src={"' + src + '"} alt="' + title + '" />\n\n'
 }
@@ -156,11 +164,6 @@ function checkInnerText(line) {
  * @return {string} The converted line from markdown to JSX
  */
 function mDtoReactElement(line) {
-
-    // switch(line.charAt(0)){
-    //     case '#': if(line.charAt(1) === '#') { createHeaderTag(line)}
-
-    // }
     if (line.charAt(0) === '#') {
         return createHeaderTag(line);
     } else if (line.match(REGEX_LINK_DEC) !== null || line.match(REGEX_LINK_NAK) !== null) {
@@ -171,11 +174,8 @@ function mDtoReactElement(line) {
     } else if (line.match(REGEX_LIST) !== null) {
         return createListItem(line);
     } else {
-        // console.log(new RegExp(LINK_REGEX).test(line))
         return checkInnerText(line);
     }
-
-    return ""
 }
 
 
@@ -202,27 +202,87 @@ function readSingleFileAndSplit(filename) {
         stream.once('open', function (fd) {
             stream.write(HEADER + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + " = () => (\n");  // Writing the header of the react component
 
-            // here i need to figure out react components
-            arr.forEach(element => {
-                if (element) {
-                    var ret = mDtoReactElement(element);
-                    if (ret.includes('<li>') && !listBool) {
-                        listBool = true;
-                        stream.write("\n<ul>\n");
-                        stream.write(ret);
-                    } else if (!ret.includes('<li>') && listBool) {
-                        stream.write("\n</ul>\n");
-                        listBool = false;
-                        stream.write(ret);
-                    } else if (ret.includes('<li>') && listBool) {
-                        stream.write(ret);
-                    } else if (!ret.includes('<li>') && !listBool) {
-                        stream.write('\n' + ret);
+            var multiLine = false;
+            var multiLineContent = '';
+            var skip = false
+
+
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i] === "") {
+                    continue
+                } else {
+                    if (arr[i]) {
+                        if (arr[i] === '\n' || arr[i].trim().length == 0) {
+                            continue;
+                        } else {
+                            var ret = mDtoReactElement(arr[i]);
+                            if (ret.includes('<li>') && !listBool) {
+                                stream.write("\n<ul>\n");
+                                if (REGEX_LIST_MULTILINE.test(arr[i])) {
+                                    console.log("MULTILINE")
+                                    multiLine = true;
+                                    multiLineContent = ret;
+                                } else {
+                                    multiLine = false;
+                                    stream.write(ret);
+                                }
+                                listBool = true;
+                            } else if (!ret.includes('<li>') && listBool) {
+                                if (multiLine) {
+                                    stream.write(multiLineContent.substr(0, multiLineContent.length - 7) + arr[i] + '</li>\n');
+                                    multiLine = false;
+                                } else {
+                                    stream.write(ret);
+                                }
+                                stream.write("</ul>\n");
+                                listBool = false;
+
+                            } else if (ret.includes('<li>') && listBool) {
+                                stream.write(ret);
+                            } else if (!ret.includes('<li>') && !listBool) {
+                                stream.write('\n' + ret + '\n');
+                            }
+                        }
                     }
                 }
-                // if (!listBool) 
+            }
 
-            });
+            // here i need to figure out react components
+            // arr.forEach(element => {
+            //     if (element) {
+            //         if (element === '\n' || element.trim().length == 0) {
+            //             return;
+            //         } else {
+            //             var ret = mDtoReactElement(element);
+            //             if (ret.includes('<li>') && !listBool) {
+            //                 stream.write("\n<ul>\n");
+            //                 if (REGEX_LIST_MULTILINE.test(element) !== null) {
+            //                     console.log("MULTILINE")
+            //                     multiLine = true;
+            //                     multiLineContent = ret;
+            //                 } else {
+            //                     stream.write(ret);
+            //                 }
+            //                 listBool = true;
+            //             } else if (!ret.includes('<li>') && listBool) {
+            //                 if (multiLine) {
+            //                     stream.write(multiLineContent.substr(0, multiLineContent.length - 6) + element + '</li>\n');
+            //                     multiLine = false;
+
+            //                 } else {
+            //                     stream.write(ret);
+            //                 }
+            //                 stream.write("</ul>\n");
+            //                 listBool = false;
+
+            //             } else if (ret.includes('<li>') && listBool) {
+            //                 stream.write(ret);
+            //             } else if (!ret.includes('<li>') && !listBool) {
+            //                 stream.write('\n' + ret);
+            //             }
+            //         }
+            //     }
+            // });
 
 
             stream.write(');\n\nexport default ' + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + ";") // Closing and exporting the react component
