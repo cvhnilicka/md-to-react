@@ -12,7 +12,8 @@ const REGEX_IMG_TITLE = /\!\[.*?\]/g
 const REGEX_IMG_SRC = /\(.*?\)/g
 // LIST
 const REGEX_LIST = /^\*\s\S/g
-const REGEX_LIST_MULTILINE = /^\*\s\S.+\s{2}\n/g
+const REGEX_LIST_MULTILINE = /^\*\s\S.+\s{2}/g
+const REGEX_LIST_CONVERTED = /^\<li\>.*\<\/li\>/g
 // MISC
 const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
 
@@ -205,6 +206,9 @@ function readSingleFileAndSplit(filename) {
             var multiLine = false;
             var multiLineContent = '';
             var skip = false
+            var listItemArr = [];
+            var inList = false;
+            var endListCount = 0;
 
 
             for (var i = 0; i < arr.length; i++) {
@@ -213,77 +217,46 @@ function readSingleFileAndSplit(filename) {
                 } else {
                     if (arr[i]) {
                         if (arr[i] === '\n' || arr[i].trim().length == 0) {
+                            console.log('nothing')
                             continue;
                         } else {
                             var ret = mDtoReactElement(arr[i]);
-                            if (ret.includes('<li>') && !listBool) {
-                                stream.write("\n<ul>\n");
-                                if (REGEX_LIST_MULTILINE.test(arr[i])) {
-                                    console.log("MULTILINE")
-                                    multiLine = true;
-                                    multiLineContent = ret;
-                                } else {
-                                    multiLine = false;
-                                    stream.write(ret);
-                                }
-                                listBool = true;
-                            } else if (!ret.includes('<li>') && listBool) {
-                                if (multiLine) {
-                                    stream.write(multiLineContent.substr(0, multiLineContent.length - 7) + arr[i] + '</li>\n');
-                                    multiLine = false;
-                                } else {
-                                    stream.write(ret);
-                                }
-                                stream.write("</ul>\n");
-                                listBool = false;
 
-                            } else if (ret.includes('<li>') && listBool) {
-                                stream.write(ret);
-                            } else if (!ret.includes('<li>') && !listBool) {
-                                stream.write('\n' + ret + '\n');
+                            // OLD LIST CODE IS COMMENTED AT EOF
+                            if (REGEX_LIST_CONVERTED.test(ret)) {
+                                endListCount = 0;
+                                // we are in a list
+                                if (!inList) inList = true;
+                                // first check if it is a multiline
+                                if (arr[i].match(REGEX_LIST_MULTILINE) !== null) {
+                                    console.log("MULTILINE")
+                                    // add add next to middle of element 
+                                    ret  = ret.substr(0, ret.length-7) + arr[i+1] + '</li>\n';
+                                    i += 1;
+                                }
+                                // add it to the list item array 
+                                listItemArr.push(ret);
+                            } 
+
+                            if (!REGEX_LIST_CONVERTED.test(ret)) endListCount+=1;
+
+                            if (endListCount > 1) {
+                                // write out the list yo
+                                console.log('writing')
+                                stream.write('\n<ul>\n')
+                                console.log(listItemArr)
+                                for(var k = 0; k < listItemArr.length; k++) {
+                                    stream.write(listItemArr[k]);
+                                }
+                                stream.write('</ul>\n')
+                                inList = false;
+                                listItemArr = []
                             }
+                           
                         }
                     }
                 }
             }
-
-            // here i need to figure out react components
-            // arr.forEach(element => {
-            //     if (element) {
-            //         if (element === '\n' || element.trim().length == 0) {
-            //             return;
-            //         } else {
-            //             var ret = mDtoReactElement(element);
-            //             if (ret.includes('<li>') && !listBool) {
-            //                 stream.write("\n<ul>\n");
-            //                 if (REGEX_LIST_MULTILINE.test(element) !== null) {
-            //                     console.log("MULTILINE")
-            //                     multiLine = true;
-            //                     multiLineContent = ret;
-            //                 } else {
-            //                     stream.write(ret);
-            //                 }
-            //                 listBool = true;
-            //             } else if (!ret.includes('<li>') && listBool) {
-            //                 if (multiLine) {
-            //                     stream.write(multiLineContent.substr(0, multiLineContent.length - 6) + element + '</li>\n');
-            //                     multiLine = false;
-
-            //                 } else {
-            //                     stream.write(ret);
-            //                 }
-            //                 stream.write("</ul>\n");
-            //                 listBool = false;
-
-            //             } else if (ret.includes('<li>') && listBool) {
-            //                 stream.write(ret);
-            //             } else if (!ret.includes('<li>') && !listBool) {
-            //                 stream.write('\n' + ret);
-            //             }
-            //         }
-            //     }
-            // });
-
 
             stream.write(');\n\nexport default ' + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + ";") // Closing and exporting the react component
             stream.end();
@@ -315,3 +288,38 @@ module.exports = {
     createListItem: createListItem,
     createImageTag: createImageTag
 };
+
+
+
+
+
+
+// SAVED TIDBITS
+
+// OLD LIST CODE
+ // if (ret.includes('<li>') && !listBool) {
+//     stream.write("\n<ul>\n");
+//     if (REGEX_LIST_MULTILINE.test(arr[i])) {
+//         console.log("MULTILINE")
+//         multiLine = true;
+//         multiLineContent = ret;
+//     } else {
+//         multiLine = false;
+//         stream.write(ret);
+//     }
+//     listBool = true;
+// } else if (!ret.includes('<li>') && listBool) {
+//     if (multiLine) {
+//         stream.write(multiLineContent.substr(0, multiLineContent.length - 7) + arr[i] + '</li>\n');
+//         multiLine = false;
+//     } else {
+//         stream.write(ret);
+//     }
+//     stream.write("</ul>\n");
+//     listBool = false;
+
+// } else if (ret.includes('<li>') && listBool) {
+//     stream.write(ret);
+// } else if (!ret.includes('<li>') && !listBool) {
+//     stream.write('\n' + ret + '\n');
+// }
