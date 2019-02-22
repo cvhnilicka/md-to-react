@@ -202,13 +202,10 @@ function readSingleFileAndSplit(filename) {
         var stream = fs.createWriteStream('./output/' + filename.substr(0, filename.length - 3) + ".js");
         stream.once('open', function (fd) {
             stream.write(HEADER + filename.charAt(0).toUpperCase() + filename.substr(1, filename.length - 4) + " = () => (\n");  // Writing the header of the react component
-
-            var multiLine = false;
-            var multiLineContent = '';
-            var skip = false
-            var listItemArr = [];
-            var inList = false;
-            var endListCount = 0;
+            // local variables
+            var listItemArr = [];   // used for dynamic lists
+            var inList = false;     // used for list writing
+            var endListCount = 0;   // counts number of lines after list to write out
 
 
             for (var i = 0; i < arr.length; i++) {
@@ -217,7 +214,6 @@ function readSingleFileAndSplit(filename) {
                 } else {
                     if (arr[i]) {
                         if (arr[i] === '\n' || arr[i].trim().length == 0) {
-                            console.log('nothing')
                             continue;
                         } else {
                             var ret = mDtoReactElement(arr[i]);
@@ -229,7 +225,6 @@ function readSingleFileAndSplit(filename) {
                                 if (!inList) inList = true;
                                 // first check if it is a multiline
                                 if (arr[i].match(REGEX_LIST_MULTILINE) !== null) {
-                                    console.log("MULTILINE")
                                     // add add next to middle of element 
                                     ret  = ret.substr(0, ret.length-7) + arr[i+1] + '</li>\n';
                                     i += 1;
@@ -241,10 +236,8 @@ function readSingleFileAndSplit(filename) {
                             if (!REGEX_LIST_CONVERTED.test(ret)) endListCount+=1;
 
                             if (endListCount > 1) {
-                                // write out the list yo
-                                console.log('writing')
+                                // write out the list
                                 stream.write('\n<ul>\n')
-                                console.log(listItemArr)
                                 for(var k = 0; k < listItemArr.length; k++) {
                                     stream.write(listItemArr[k]);
                                 }
@@ -288,38 +281,3 @@ module.exports = {
     createListItem: createListItem,
     createImageTag: createImageTag
 };
-
-
-
-
-
-
-// SAVED TIDBITS
-
-// OLD LIST CODE
- // if (ret.includes('<li>') && !listBool) {
-//     stream.write("\n<ul>\n");
-//     if (REGEX_LIST_MULTILINE.test(arr[i])) {
-//         console.log("MULTILINE")
-//         multiLine = true;
-//         multiLineContent = ret;
-//     } else {
-//         multiLine = false;
-//         stream.write(ret);
-//     }
-//     listBool = true;
-// } else if (!ret.includes('<li>') && listBool) {
-//     if (multiLine) {
-//         stream.write(multiLineContent.substr(0, multiLineContent.length - 7) + arr[i] + '</li>\n');
-//         multiLine = false;
-//     } else {
-//         stream.write(ret);
-//     }
-//     stream.write("</ul>\n");
-//     listBool = false;
-
-// } else if (ret.includes('<li>') && listBool) {
-//     stream.write(ret);
-// } else if (!ret.includes('<li>') && !listBool) {
-//     stream.write('\n' + ret + '\n');
-// }
