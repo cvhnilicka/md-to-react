@@ -84,19 +84,19 @@ function createATag(line) {
     } else {
 
         for (var i = 0; i < line.length; i++) {
-            if (line.charAt(i) === '[') {
-                display = true
-                i += 1;
-            } else if (line.charAt(i) === ']') {
-                display = false
+            switch(line.charAt(i)){
+                case '[': display = true
+                            i+=1
+                            break;
+                case ']': display = false
+                            break;
+                case '(': ref = true 
+                            i+=1
+                            break;
+                case ')': ref = false
+                            break;
             }
-            if (line.charAt(i) === '(') {
-                ref = true
-                i += 1;
-            } else if (line.charAt(i) === ')') {
-                ref = false
-            }
-
+            
             if (display) {
                 displayText += line.charAt(i)
             } else if (ref) {
