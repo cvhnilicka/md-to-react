@@ -21,7 +21,7 @@ const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
 
 
 
-readMarkdownDirectory()
+// readMarkdownDirectory()
 
 
 //=================================================================================================================================================================================
@@ -39,6 +39,7 @@ readMarkdownDirectory()
  * @return {string} A new image
  */
 function createImageTag(line) {
+    if (line.match(REGEX_IMG) === null) return;
     var title = line.match(REGEX_IMG_TITLE)[0]
     title = title.substring(2, title.length - 1)
     var src = (line.match(REGEX_IMG_SRC)[0])
@@ -73,39 +74,45 @@ function createListItem(line) {
  * @return {string} The full jsx link
  */
 function createATag(line) {
-    var displayText = ""
-    var href = ""
-    var display = false
-    var ref = false
-    var matches;
-    if ((matches = line.match(REGEX_LINK_NAK)) !== null) {
-        href = matches[0].substr(1, line.length - 2);
-        displayText = matches[0].substr(1, line.length - 2);
-    } else {
+    if (line.match(REGEX_LINK_DEC) !== null || line.match(REGEX_LINK_NAK) !== null) {
 
-        for (var i = 0; i < line.length; i++) {
-            switch(line.charAt(i)){
-                case '[': display = true
-                            i+=1
-                            break;
-                case ']': display = false
-                            break;
-                case '(': ref = true 
-                            i+=1
-                            break;
-                case ')': ref = false
-                            break;
-            }
 
-            if (display) {
-                displayText += line.charAt(i)
-            } else if (ref) {
-                href += line.charAt(i)
+        var displayText = ""
+        var href = ""
+        var display = false
+        var ref = false
+        var matches;
+        if ((matches = line.match(REGEX_LINK_NAK)) !== null) {
+            href = matches[0].substr(1, line.length - 2);
+            displayText = matches[0].substr(1, line.length - 2);
+        } else {
+
+            for (var i = 0; i < line.length; i++) {
+                switch (line.charAt(i)) {
+                    case '[': display = true
+                        i += 1
+                        break;
+                    case ']': display = false
+                        break;
+                    case '(': ref = true
+                        i += 1
+                        break;
+                    case ')': ref = false
+                        break;
+                }
+
+                if (display) {
+                    displayText += line.charAt(i)
+                } else if (ref) {
+                    href += line.charAt(i)
+                }
             }
+            displayText = checkInnerText(displayText)
         }
-        displayText = checkInnerText(displayText)
+        return '<a href="' + href + '">' + displayText + '</a>\n\n'
+    } else {
+        return
     }
-    return '<a href="' + href + '">' + displayText + '</a>\n\n'
 }
 
 
@@ -120,11 +127,16 @@ function createATag(line) {
  * @return {string} The full header tag with content
  */
 function createHeaderTag(lineStartingWithPound) {
+    if (lineStartingWithPound.charAt(0) !== '#') return;
     var hValue = 1;
     for (var i = 1; i < lineStartingWithPound.length; i++) {
         if (lineStartingWithPound.charAt(i) === '#') hValue++;
-        else break;
+        else if (hValue > 6) {
+            hValue = 6;
+            break;
+        } else break;
     }
+
     return '<h' + hValue + '>' + lineStartingWithPound.substr(hValue) + '</h' + hValue + '>\n';
 }
 
@@ -226,27 +238,27 @@ function readSingleFileAndSplit(filename) {
                                 // first check if it is a multiline
                                 if (arr[i].match(REGEX_LIST_MULTILINE) !== null) {
                                     // add add next to middle of element 
-                                    ret  = ret.substr(0, ret.length-7) + arr[i+1] + '</li>\n';
+                                    ret = ret.substr(0, ret.length - 7) + arr[i + 1] + '</li>\n';
                                     i += 1;
                                 }
                                 // add it to the list item array 
                                 listItemArr.push(ret);
                             }
 
-                            if (!REGEX_LIST_CONVERTED.test(ret)) endListCount+=1;
+                            if (!REGEX_LIST_CONVERTED.test(ret)) endListCount += 1;
 
                             if (endListCount > 1) {
                                 // write out the list
                                 stream.write('\n<ul>\n')
-                                for(var k = 0; k < listItemArr.length; k++) {
+                                for (var k = 0; k < listItemArr.length; k++) {
                                     stream.write(listItemArr[k]);
                                 }
                                 stream.write('</ul>\n')
                                 inList = false;
                                 listItemArr = []
                             }
-                            
-                           if (!inList) stream.write('\n'+ret+'\n')
+
+                            if (!inList) stream.write('\n' + ret + '\n')
                         }
                     }
                 }
@@ -280,5 +292,7 @@ module.exports = {
     createATag: createATag,
     createHeaderTag: createHeaderTag,
     createListItem: createListItem,
-    createImageTag: createImageTag
+    createImageTag: createImageTag,
+    readMarkdownDirectory: readMarkdownDirectory,
+    readSingleFileAndSplit: readSingleFileAndSplit
 };

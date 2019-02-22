@@ -4,7 +4,7 @@
   "description": "A npm package to take markdown files and convert them to static react components",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --recursive"
   },
   "author": "Cormick Hnilicka",
   "license": "ISC",
