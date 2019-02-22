@@ -25,6 +25,39 @@ __supports inline links only currently__
 ###### Lists
 `* A list item` => `<li> A list item</li>`
 
+```
+<h2> This is a list example</h2>
+
+
+<ul>
+<li> This two-line bullet won't break</li>
+<li> This two-line bullet will break</li>
+<li> This third-line bullet will break</li>
+<li> this fourth one is one line</li>
+</ul>
+
+After Text shouldnt be in list
+```
+
+converts to
+
+```
+<h2> This is a list example</h2>
+
+
+<ul>
+<li> This two-line bullet won't break</li>
+<li> This two-line bullet will break</li>
+<li> This third-line bullet will break</li>
+<li> this fourth one is one line</li>
+</ul>
+
+After Text shouldnt be in list
+```
+
+List elements (*) must be at most on line apart and the following non-list element must be two+ lines below the end of the list
+
+
 ###### Images
 `![MacDown logo](http://macdown.uranusjr.com/static/images/logo-160.png)` => `<img src={"http://macdown.uranusjr.com/static/images/logo-160.png"} alt="MacDown logo" />`
 

@@ -96,7 +96,7 @@ function createATag(line) {
                 case ')': ref = false
                             break;
             }
-            
+
             if (display) {
                 displayText += line.charAt(i)
             } else if (ref) {
@@ -231,7 +231,7 @@ function readSingleFileAndSplit(filename) {
                                 }
                                 // add it to the list item array 
                                 listItemArr.push(ret);
-                            } 
+                            }
 
                             if (!REGEX_LIST_CONVERTED.test(ret)) endListCount+=1;
 
@@ -245,7 +245,8 @@ function readSingleFileAndSplit(filename) {
                                 inList = false;
                                 listItemArr = []
                             }
-                           
+                            
+                           if (!inList) stream.write('\n'+ret+'\n')
                         }
                     }
                 }
