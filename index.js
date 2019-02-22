@@ -21,7 +21,7 @@ const REGEX_INNER_STRONG = /\*\*[^.*?]+\*\*/g
 
 
 
-// readMarkdownDirectory()
+readMarkdownDirectory()
 
 
 //=================================================================================================================================================================================
@@ -245,7 +245,7 @@ function readSingleFileAndSplit(filename) {
                                 listItemArr.push(ret);
                             }
 
-                            if (!REGEX_LIST_CONVERTED.test(ret)) endListCount += 1;
+                            if (!REGEX_LIST_CONVERTED.test(ret) && inList) endListCount += 1;
 
                             if (endListCount > 1) {
                                 // write out the list
@@ -255,6 +255,7 @@ function readSingleFileAndSplit(filename) {
                                 }
                                 stream.write('</ul>\n')
                                 inList = false;
+                                endListCount = 0;
                                 listItemArr = []
                             }
 
