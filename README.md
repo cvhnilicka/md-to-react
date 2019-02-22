@@ -26,15 +26,18 @@ __supports inline links only currently__
 `* A list item` => `<li> A list item</li>`
 
 ```
-<h2> This is a list example</h2>
+## This is a list example
 
+* This two-line bullet won't break
 
-<ul>
-<li> This two-line bullet won't break</li>
-<li> This two-line bullet will break</li>
-<li> This third-line bullet will break</li>
-<li> this fourth one is one line</li>
-</ul>
+* This two-line bullet  
+will break
+
+* This third-line bullet  
+will break
+
+* this fourth one is one line
+
 
 After Text shouldnt be in list
 ```
